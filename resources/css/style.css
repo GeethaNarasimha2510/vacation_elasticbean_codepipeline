@@ -15,7 +15,7 @@ html{
 }
 
 body{
-    background-color:hsl(80 40% 80%);
+    background-color:hsl(320, 0%, 0%);
     color: darkslategray;
     margin-top: 6.5rem;
 }
@@ -29,7 +29,7 @@ header {
     top: 0;
     left: 0;
     z-index: 5;
-    background-color: hsl(104 36% 28%);
+    background-color: hsl(102, 72%, 0%);
 }
 
 .left-header a{
