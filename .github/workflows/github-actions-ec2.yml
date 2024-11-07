@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout the files
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Deploy to Server 1
         uses: easingthemes/ssh-deploy@main
@@ -21,8 +21,15 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           REMOTE_HOST: ${{ secrets.HOST_DNS }}
           REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
-          ARGS: "-rltgoDzvO" 
+          TARGET: "/var/www/html"
+          run: |
+          # Save SSH key to a file with appropriate permissions
+          echo "${SSH_PRIVATE_KEY}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Sync files to the server using rsync
+          rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            ./ $REMOTE_USER@$REMOTE_HOST:$TARGET_DIR
 
       - name: Executing remote ssh commands using ssh key
         uses: appleboy/ssh-action@master
@@ -31,11 +38,10 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Install Apache if not already installed, restart, and enable it
             sudo apt-get -y update
             sudo apt-get install -y apache2
             sudo systemctl restart apache2
             sudo systemctl enable apache2
             # Set ownership of /var/www/html to allow Apache to serve updated files
             sudo chown -R www-data:www-data /var/www/html
-            cd home
-            sudo mv * /var/www/html
